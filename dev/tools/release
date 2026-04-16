@@ -128,7 +128,7 @@ def main():
             "--title", tag,
             "--verify-tag",
             "--draft",
-            "--repo", "kubernetes-sigs/agent-sandbox"
+            "--repo", "shrutiyam-glitch/agent-sandbox-trial"
         ])
         
         run_command(cmd)

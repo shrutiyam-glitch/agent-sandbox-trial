@@ -128,7 +128,7 @@ pip install k8s-agent-sandbox=={tag.lstrip('v')}
 ```
 """
 
-    combined_content = ""
+    combined_content = f"# 🚀 Announcing Agent Sandbox {tag}!\nWe are excited to announce the release of Agent Sandbox {tag}!\n\n"
     if highlights:
         combined_content += highlights + "\n\n"
         

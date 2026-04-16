@@ -7,7 +7,7 @@ on:
   # For Major/Minor version updates
   workflow_dispatch:
     inputs:
-      tag: #TODO: should check tag version pattern # check permissions for pushing a tag 
+      tag: 
         description: 'Tag for release (e.g., v0.2.0). Leave blank for auto-patch.'
         required: false
         type: string
@@ -107,7 +107,7 @@ jobs:
     needs: promote
     if: needs.promote.outputs.run_release == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 360 # 6-hour limit for long k8s.io merge cycles
+    timeout-minutes: 720 # 12-hour limit for long k8s.io merge cycles
     steps:
       - name: Wait for PR Merge
         env:
@@ -117,8 +117,8 @@ jobs:
         run: |
           echo "Waiting for $PR_URL to be merged..."
           
-          # 60 attempts, every 5 minutes = 5 hours total
-          for i in {1..60}; do
+          # 144 attempts, every 5 minutes = 12 hours total
+          for i in {1..144}; do
             # Explicitly check the kubernetes/k8s.io repo context
             STATE=$(gh pr view "$PR_URL" --repo kubernetes/k8s.io --json state --jq '.state')
             
@@ -143,12 +143,12 @@ jobs:
     needs: [promote, poll-merge]
     if: needs.promote.outputs.run_release == 'true'
     runs-on: ubuntu-latest
-    environment: 
-      name: agent-sandbox-release
       
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        # To ensure pushing the tag during the workflow has the permission to trigger the PyPI publish workflow on pushing the tag. 
+        token: ${{ secrets.K8S_IO_PAT}} 
 
       - name: Set up Go
         uses: actions/setup-go@v5
