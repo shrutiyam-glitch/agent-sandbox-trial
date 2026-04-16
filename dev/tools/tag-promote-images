@@ -34,6 +34,12 @@ IMAGES_TO_PROMOTE = [
     "python-runtime-sandbox"
 ]
 
+DIGESTS = {
+    "agent-sandbox-controller": "9f09c62da5ac",
+    "chrome-sandbox": "617b9d67b3fa",
+    "python-runtime-sandbox": "6049fea73406"
+}
+
 # Git Remotes (Adjust if your remote names differ)
 REMOTE_UPSTREAM = "upstream"
 REMOTE_FORK = "origin"
@@ -111,7 +117,7 @@ def main():
     collected_digests = {}
 
     for image in IMAGES_TO_PROMOTE:
-        digest = get_latest_digest(image, tag)
+        digest = DIGESTS[image] #get_latest_digest(image, tag)
         print("") # Newline after dots
         if not digest:
             print(f"❌ Timeout waiting for {image}. Please check Cloud Build logs.")
