@@ -32,6 +32,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # To ensure pushing the tag during the workflow has the permission to trigger the PyPI publish workflow on pushing the tag. 
+          token: ${{ secrets.GH_AUTOMATION_PAT }}
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -52,11 +54,11 @@ jobs:
           GH_USER=$(gh api user --jq .login)
           git remote add origin "https://x-access-token:${{ secrets.K8S_IO_PAT }}@github.com/$GH_USER/k8s.io.git" || git remote set-url origin "https://x-access-token:${{ secrets.K8S_IO_PAT }}@github.com/$GH_USER/k8s.io.git"
 
-      # - name: Authenticate to Google Cloud
-      #   uses: google-github-actions/auth@v2
-      #   with:
-      #     workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
-      #     service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
+          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
