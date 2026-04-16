@@ -116,7 +116,7 @@ def main():
 
     # --- Step 1: Create and Push Tag ---
     print(f"--- Step 1: Handling Git Tag {tag} and Publish to PyPI---")
-    create_and_push_tag(tag, remote=REMOTE_UPSTREAM)
+    create_and_push_tag(tag, remote=remote_agent_sandbox)
 
     print("✅ Done! The 'pypi-publish' GitHub Action should now be running.")
 
