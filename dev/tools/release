@@ -121,11 +121,10 @@ def main():
         
         if notes_file:
             cmd.extend(["--notes-file", notes_file])
-        else:
-            cmd.append("--generate-notes")
             
         cmd.extend([
             "--title", tag,
+            "--generate-notes",
             "--verify-tag",
             "--draft",
             "--repo", "shrutiyam-glitch/agent-sandbox-trial"
