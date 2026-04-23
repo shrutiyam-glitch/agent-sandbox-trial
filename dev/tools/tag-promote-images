@@ -38,23 +38,22 @@ IMAGES_TO_PROMOTE = [
 
 def get_remote_name(cwd=None, preferred_remote=None):
     """Returns the preferred remote if specified and exists, or 'upstream' if it exists.
-    Raises an exception if not found.
+    Falls back to 'origin' if neither are found.
+    Raises an exception if no valid remote is found.
     """
     try:
         remotes = run_command(["git", "remote"], cwd=cwd, capture_output=True).splitlines()
-        if preferred_remote:
-            if preferred_remote in remotes:
-                return preferred_remote
-            raise Exception(
-                f"Specified remote '{preferred_remote}' not found. Available remotes: {remotes}"
-            )
+        if preferred_remote and preferred_remote in remotes:
+            return preferred_remote
         
         if "upstream" in remotes:
             return "upstream"
+            
+        if "origin" in remotes:
+            return "origin"
         
         raise Exception(
-            f"Could not find 'upstream' remote. Available remotes: {remotes}. "
-            f"Please specify the remote using arguments."
+            f"Could not find any valid git remote. Available remotes: {remotes}. "
         )
     except Exception as e:
         raise Exception(f"Failed to determine git remote: {e}")

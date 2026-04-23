@@ -21,7 +21,7 @@ jobs:
   promote:
     name: Promote Images
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 180
     outputs:
       pr_url: ${{ steps.extract-pr.outputs.pr_url }}
       run_release: ${{ steps.set-tag.outputs.run_release || steps.auto-tag.outputs.run_release }}
@@ -149,7 +149,10 @@ jobs:
       
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # ratchet:actions/checkout@v4
+        with:
+          ref: refs/tags/${{ needs.promote.outputs.new_tag }}
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
