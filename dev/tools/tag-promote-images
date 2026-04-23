@@ -67,7 +67,7 @@ def get_latest_digest(image_name, tag):
     """Polls the staging registry for the latest digest matching the tag."""
     image_path = f"{STAGING_REPO_BASE}/{image_name}"
     # Enforce image tag format: vYYYYMMDD-<git tag>-main
-    filter_arg = f"tags~v[0-9]{{8}}-0.3.10-main" #TODO: change later
+    filter_arg = f"tags~v[0-9]{{8}}-v0.3.10-main" #TODO: change later
     
     print(f"   Searching {image_path} for tag pattern: {filter_arg}")
     
