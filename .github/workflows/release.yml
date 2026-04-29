@@ -35,7 +35,7 @@ jobs:
           fetch-depth: 0
           # To ensure pushing the tag during the workflow has the permission to trigger the PyPI publish workflow.
           # Github secret has repo access.
-          token: ${{ secrets.GH_AUTOMATION_PAT }}
+          token: ${{ secrets.K8S_IO_PAT }}
 
       - name: Set up Go
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # ratchet:actions/setup-go@v5
@@ -115,7 +115,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: release
     timeout-minutes: 360 # 6-hour limit for long k8s.io merge cycles
-    
+
     steps:
       - name: Wait for PR Merge
         env:
