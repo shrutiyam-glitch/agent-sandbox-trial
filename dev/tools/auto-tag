@@ -22,16 +22,16 @@ from shared.git_ops import run_command
 
 def increment_patch(version_str):
     """Calculates the next release candidate tag.
-    - If already an RC (e.g., v0.1.1-rc.0), increments the RC counter (v0.1.1-rc.1).
-    - Otherwise, increments the patch version and starts at rc.0 (e.g., v0.1.0 -> v0.1.1-rc.0).
+    - If already an RC (e.g., v0.1.0rc1), increments the RC counter (v0.1.0rc2).
+    - Otherwise, increments the patch version and starts at rc1 (e.g., v0.1.0 -> v0.1.1rc1).
     
     TODO: Remove the rc suffix for official releases before switching to final patch versions.
     """
-    rc_match = re.match(r'^v?(\d+\.\d+\.\d+)-rc\.(\d+)$', version_str)
+    rc_match = re.match(r'^v?(\d+\.\d+\.\d+)rc(\d+)$', version_str)
     if rc_match:
         version = rc_match.group(1)
         rc_num = int(rc_match.group(2))
-        return f"v{version}-rc.{rc_num + 1}"
+        return f"v{version}rc{rc_num + 1}"
 
     clean_version = re.match(r'^v?(\d+\.\d+\.\d+)', version_str)
     if clean_version:
@@ -46,7 +46,7 @@ def increment_patch(version_str):
     major, minor, patch = map(int, match.groups())
     patch += 1
 
-    return f"v{major}.{minor}.{patch}-rc.0"
+    return f"v{major}.{minor}.{patch}rc0"
 
 def main():
     print("🔍 Checking for new commits since last release...")
