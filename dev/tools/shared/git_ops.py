@@ -48,9 +48,12 @@ def check_local_repo_state(remote):
     print(f"🛡️  Verifying local repository state...")
 
     # 1. Check for uncommitted changes
-    if os.environ.get("GITHUB_ACTIONS") == "true":
-        print("ℹ️  Running in GitHub Actions. Skipping uncommitted changes check.")
-    elif run_command(["git", "status", "--porcelain"], capture_output=True):
+    # if os.environ.get("GITHUB_ACTIONS") == "true":
+    #     print("ℹ️  Running in GitHub Actions. Skipping uncommitted changes check.")
+    dirty_status = run_command(["git", "status", "--porcelain"], capture_output=True)
+    if dirty_status:
+        print("🔍 Dirty files/folders:")
+        print(dirty_status)
         print(
             "❌ You have uncommitted changes in agent-sandbox. Please commit or stash them."
         )
