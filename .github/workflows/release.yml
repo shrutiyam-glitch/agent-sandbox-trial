@@ -69,7 +69,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.K8S_IO_PAT }}
         run: |
-          echo "${{ secrets.K8S_IO_PAT }}" | gh auth login --with-token
           TAG="${{ steps.set-tag.outputs.new_tag || steps.auto-tag.outputs.new_tag }}"
           make release-promote TAG="$TAG" ONLY_TAGGING=true
 
@@ -136,7 +135,6 @@ jobs:
           # Use the Fork token for Git pushing
           FORK_TOKEN: ${{ secrets.K8S_IO_PAT }}
         run: |
-          echo "${{ secrets.K8S_IO_PAT }}" | gh auth login --with-token
           # Update the git remote for the fork to use the FORK_TOKEN
           GH_USER=$(gh api user --jq .login)
           git -C ../k8s.io remote set-url origin "https://x-access-token:${FORK_TOKEN}@github.com/$GH_USER/k8s.io.git"          
