@@ -99,7 +99,7 @@ def _get_tag_commit_sha(remote_tags_output, tag):
 
     lines = remote_tags_output.splitlines()
     # 1. Search for peeled tag first
-    peeled_ref = f"refs/tags/{tag}^{}"
+    peeled_ref = f"refs/tags/{tag}^{{}}"
     for line in lines:
         parts = line.split()
         if len(parts) >= 2:
