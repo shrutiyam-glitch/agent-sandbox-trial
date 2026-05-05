@@ -89,23 +89,34 @@ def check_local_repo_state(remote):
         print("   Assuming this is a test release. Continuing...")
 
 
-def _get_tag_commit_sha(remote_tags_output):
+def _get_tag_commit_sha(remote_tags_output, tag):
     """Helper to extract the commit SHA from git ls-remote tag output.
-    Prefers the peeled tag commit SHA (ending in ^{}) if it exists, otherwise
-    falls back to the lightweight tag's SHA.
+    Prefers the peeled tag commit SHA (refs/tags/<tag>^{}) if it exists, otherwise
+    falls back to the lightweight tag's SHA (refs/tags/<tag>).
     """
     if not remote_tags_output:
         return None
 
     lines = remote_tags_output.splitlines()
+    # 1. Search for peeled tag first
+    peeled_ref = f"refs/tags/{tag}^{}"
     for line in lines:
         parts = line.split()
         if len(parts) >= 2:
             sha, ref = parts[0], parts[1]
-            if ref.endswith("^{}"):
+            if ref == peeled_ref:
                 return sha
 
-    return lines[0].split()[0] if lines else None
+    # 2. Fallback to lightweight tag
+    exact_ref = f"refs/tags/{tag}"
+    for line in lines:
+        parts = line.split()
+        if len(parts) >= 2:
+            sha, ref = parts[0], parts[1]
+            if ref == exact_ref:
+                return sha
+
+    return None
 
 
 def check_tag_exists(tag, remote):
@@ -113,10 +124,10 @@ def check_tag_exists(tag, remote):
 
     print(f"🔍 Checking if tag {tag} already exists on {remote}...")
     remote_tags = run_command(
-        ["git", "ls-remote", "--tags", remote, f"refs/tags/{tag}"], capture_output=True
+        ["git", "ls-remote", "--tags", remote, f"refs/tags/{tag}*"], capture_output=True
     )
     if remote_tags:
-        remote_sha = _get_tag_commit_sha(remote_tags)
+        remote_sha = _get_tag_commit_sha(remote_tags, tag)
         local_sha = run_command(["git", "rev-parse", "HEAD"], capture_output=True)
         if remote_sha == local_sha:
             print(
