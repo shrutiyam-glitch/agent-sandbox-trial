@@ -124,7 +124,7 @@ def check_tag_exists(tag, remote):
 
     print(f"🔍 Checking if tag {tag} already exists on {remote}...")
     remote_tags = run_command(
-        ["git", "ls-remote", "--tags", remote, f"refs/tags/{tag}*"], capture_output=True
+        ["git", "ls-remote", "--tags", remote, f"refs/tags/{tag}", f"refs/tags/{tag}^{{}}"], capture_output=True
     )
     if remote_tags:
         remote_sha = _get_tag_commit_sha(remote_tags, tag)
