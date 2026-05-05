@@ -25,11 +25,17 @@ type ConditionType string
 func (c ConditionType) String() string { return string(c) }
 
 const (
-	// SandboxConditionReady indicates readiness for Sandbox
+	// SandboxConditionReady indicates readiness for Sandbox.
 	SandboxConditionReady ConditionType = "Ready"
+	// SandboxConditionFinished indicates the backing Pod reached a terminal phase.
+	SandboxConditionFinished ConditionType = "Finished"
 
-	// SandboxReasonExpired indicates expired state for Sandbox
+	// SandboxReasonExpired indicates expired state for Sandbox.
 	SandboxReasonExpired = "SandboxExpired"
+	// SandboxReasonPodSucceeded indicates the backing Pod completed successfully.
+	SandboxReasonPodSucceeded = "PodSucceeded"
+	// SandboxReasonPodFailed indicates the backing Pod completed unsuccessfully.
+	SandboxReasonPodFailed = "PodFailed"
 
 	// SandboxPodNameAnnotation is the annotation used to track the pod name adopted from a warm pool.
 	SandboxPodNameAnnotation = "agents.x-k8s.io/pod-name"
@@ -104,7 +110,7 @@ type PersistentVolumeClaimTemplate struct {
 	Spec corev1.PersistentVolumeClaimSpec `json:"spec" protobuf:"bytes,3,opt,name=spec"`
 }
 
-// SandboxSpec defines the desired state of Sandbox
+// SandboxSpec defines the desired state of Sandbox.
 type SandboxSpec struct {
 	// The following markers will use OpenAPI v3 schema to validate the value
 	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
@@ -116,6 +122,7 @@ type SandboxSpec struct {
 	// volumeClaimTemplates is a list of claims that the sandbox pod is allowed to reference.
 	// Every claim in this list must have at least one matching access mode with a provisioner volume.
 	// +optional
+	// +listType=atomic
 	VolumeClaimTemplates []PersistentVolumeClaimTemplate `json:"volumeClaimTemplates,omitempty" protobuf:"bytes,4,rep,name=volumeClaimTemplates"`
 
 	// Lifecycle defines when and how the sandbox should be shut down.
@@ -193,7 +200,7 @@ type SandboxStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas,selectorpath=.status.selector
 // +kubebuilder:resource:scope=Namespaced,shortName=sandbox
-// Sandbox is the Schema for the sandboxes API
+// Sandbox is the Schema for the sandboxes API.
 type Sandbox struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -212,7 +219,7 @@ type Sandbox struct {
 
 // +kubebuilder:object:root=true
 
-// SandboxList contains a list of Sandbox
+// SandboxList contains a list of Sandbox.
 type SandboxList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

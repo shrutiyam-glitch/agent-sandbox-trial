@@ -27,10 +27,13 @@ import (
 // and manages a shared NetworkPolicy for this template.
 type NetworkPolicyManagement string
 
+// EnvVarsInjectionPolicy defines whether a SandboxClaim is allowed to inject or override environment variables.
+type EnvVarsInjectionPolicy string
+
 const (
 	// SandboxIDLabel is the label key applied to the Pod to identify the owning Claim UID.
 	// The SandboxClaim controller injects this label into the Pod
-	// System-injected labels/annotations shouldn't be touched
+	// System-injected labels/annotations shouldn't be touched.
 	SandboxIDLabel = "agents.x-k8s.io/claim-uid"
 
 	// NetworkPolicyManagementManaged means the controller will ensure a shared NetworkPolicy exists.
@@ -41,6 +44,15 @@ const (
 	// NetworkPolicyManagementUnmanaged means the controller will skip NetworkPolicy
 	// creation entirely, allowing external systems (like Cilium) to manage networking.
 	NetworkPolicyManagementUnmanaged NetworkPolicyManagement = "Unmanaged"
+
+	// EnvVarsInjectionPolicyAllowed allows a SandboxClaim to inject new environment variables, but not override existing ones.
+	EnvVarsInjectionPolicyAllowed EnvVarsInjectionPolicy = "Allowed"
+
+	// EnvVarsInjectionPolicyOverrides allows a SandboxClaim to inject new and override existing environment variables.
+	EnvVarsInjectionPolicyOverrides EnvVarsInjectionPolicy = "Overrides"
+
+	// EnvVarsInjectionPolicyDisallowed prevents a SandboxClaim from injecting any environment variables.
+	EnvVarsInjectionPolicyDisallowed EnvVarsInjectionPolicy = "Disallowed"
 )
 
 // NetworkPolicySpec defines the desired state of the NetworkPolicy.
@@ -58,7 +70,7 @@ type NetworkPolicySpec struct {
 	Egress []networkingv1.NetworkPolicyEgressRule `json:"egress,omitempty"`
 }
 
-// SandboxTemplateSpec defines the desired state of Sandbox
+// SandboxTemplateSpec defines the desired state of Sandbox.
 type SandboxTemplateSpec struct {
 	// podTemplate defines the object template that describes the pod spec that will be used to create
 	// an agent sandbox.
@@ -66,6 +78,15 @@ type SandboxTemplateSpec struct {
 	// to ensure a secure-by-default environment.
 	// +required
 	PodTemplate sandboxv1alpha1.PodTemplate `json:"podTemplate" protobuf:"bytes,3,opt,name=podTemplate"`
+
+	// volumeClaimTemplates is a list of claims that pods created from this template
+	// are allowed to reference. When a SandboxClaim or SandboxWarmPool creates a sandbox
+	// from this template, PVCs will be created from these templates.
+	// Every claim in this list must have at least one matching access mode with a provisioner volume.
+	// NOTE: This list is atomic. Updates to this field will replace the entire list rather than merging with existing entries.
+	// +optional
+	// +listType=atomic
+	VolumeClaimTemplates []sandboxv1alpha1.PersistentVolumeClaimTemplate `json:"volumeClaimTemplates,omitempty" protobuf:"bytes,4,rep,name=volumeClaimTemplates"`
 
 	// networkPolicy defines the network policy to be applied to the sandboxes
 	// created from this template. A single shared NetworkPolicy is created per Template.
@@ -98,6 +119,13 @@ type SandboxTemplateSpec struct {
 	// +kubebuilder:default=Managed
 	// +optional
 	NetworkPolicyManagement NetworkPolicyManagement `json:"networkPolicyManagement,omitempty"`
+
+	// envVarsInjectionPolicy allows a SandboxClaim to inject or override environment variables defined in the template.
+	// If set to Disallowed, the SandboxClaim will be rejected if it specifies any environment variables.
+	// +kubebuilder:validation:Enum=Allowed;Overrides;Disallowed
+	// +kubebuilder:default=Disallowed
+	// +optional
+	EnvVarsInjectionPolicy EnvVarsInjectionPolicy `json:"envVarsInjectionPolicy,omitempty"`
 }
 
 // SandboxTemplateStatus defines the observed state of Sandbox.
@@ -108,7 +136,7 @@ type SandboxTemplateStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Namespaced,shortName=sandboxtemplate
-// SandboxTemplate is the Schema for the sandbox template API
+// SandboxTemplate is the Schema for the sandbox template API.
 type SandboxTemplate struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -127,7 +155,7 @@ type SandboxTemplate struct {
 
 // +kubebuilder:object:root=true
 
-// SandboxTemplateList contains a list of Sandbox
+// SandboxTemplateList contains a list of Sandbox.
 type SandboxTemplateList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
