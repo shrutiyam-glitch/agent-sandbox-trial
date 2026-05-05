@@ -66,6 +66,8 @@ jobs:
 
       - name: Create and Push Git Tag
         if: steps.set-tag.outputs.run_release == 'true' || steps.auto-tag.outputs.run_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.K8S_IO_PAT }}
         run: |
           TAG="${{ steps.set-tag.outputs.new_tag || steps.auto-tag.outputs.new_tag }}"
           make release-promote TAG="$TAG" ONLY_TAGGING=true
