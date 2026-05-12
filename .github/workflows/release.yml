@@ -2,8 +2,8 @@ name: Scheduled Release Automation
 
 on:
   # Version tag is incremented by patch update
-  schedule:
-    - cron: "30 21 * * *" # Every Friday at 06:00 UTC
+  # schedule:
+  #   - cron: "30 21 * * *" # Every Friday at 06:00 UTC
   # For Major/Minor version updates, enter tag manually
   workflow_dispatch:
     inputs:
