@@ -26,6 +26,8 @@ import re
 def get_previous_release_tag(current_tag):
     """Queries the latest stable release tag directly from GitHub using the gh CLI."""
     try:
+        # Assumption: Currently only patching of the latest minor release happens. 
+        # TODO: Support patching older minor releases
         latest_stable = subprocess.run(
             [
                 "gh", "release", "list",
@@ -179,14 +181,21 @@ def get_new_authors(prev_tag, current_tag):
 
 
 def generate_highlights(commits, breaking_changes, pr_descriptions, contributors, new_authors, tag, model="gemini-2.5-flash"):
-    # TODO: Use Vertex AI for Gemini API 
-
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
-    if not api_key:
-        print("⚠️ GEMINI_API_KEY not set. Skipping Gemini highlights.")
+    """Generates release highlights using Gemini via the Vertex AI API platform."""
+    # Try importing the modern SDK
+    try:
+        from google import genai
+        from google.genai import errors
+    except ImportError:
+        print("❌ Error: 'google-genai' library not installed. Run 'pip install google-genai'.")
         return None
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    project_id = os.getenv("GCP_PROJECT", "").strip()
+    location = os.getenv("GCP_LOCATION", "us-central1").strip()
+
+    if not project_id:
+        print("⚠️ GCP_PROJECT environment variable not set. Skipping Gemini highlights.")
+        return None
 
     commit_titles = "\n".join([c["title"] for c in commits])
     commit_messages = "\n".join([f"- {c['title']}\n  {c['body']}" for c in commits])
@@ -202,7 +211,7 @@ def generate_highlights(commits, breaking_changes, pr_descriptions, contributors
 - Synthesize information from full commit messages and PR descriptions to describe changes accurately.
 - List all contributors as @handle from the verified contributors list below.
 - The verified contributors list and the verified first-time authors list use different identifier formats. Do not try to match or convert between them.
-- For the "New Contributors" section, list **only** the entries from the verified new authors list below, exactly as provided. If the verified new authors list is empty, omit the "New Contributors" section entirely.
+- For the "New Contributors" section, list **only** the @handle from the verified new authors list below, exactly as provided. If the verified new authors list is empty, omit the "New Contributors" section entirely.
 
 Verified Contributors:
 {contributors_str}
@@ -223,34 +232,27 @@ Breaking Changes:
 {breaking_changes}
 """
 
-    data = {"contents": [{"parts": [{"text": prompt}]}]}
-
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(data).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-
     try:
-        with urllib.request.urlopen(req, timeout=30) as response:
-            resp_data = json.loads(response.read().decode("utf-8"))
-            candidates = resp_data.get("candidates", [])
-            if candidates:
-                parts = candidates[0].get("content", {}).get("parts", [])
-                if parts:
-                    return parts[0].get("text")
-            return None
-    except urllib.error.HTTPError as e:
-        print(f"⚠️ HTTP Error calling Gemini API ({e.code}: {e.reason}). Skipping Gemini highlights.")
-        try:
-            error_body = e.read().decode("utf-8")
-            print(f"   Response body: {error_body}")
-        except Exception:
-            pass
+        # Initialize the GenAI Client pointing at Vertex AI
+        client = genai.Client(
+            vertexai=True,
+            project=project_id,
+            location=location
+        )
+
+        # Call Vertex AI Gemini Model
+        response = client.models.generate_content(
+            model=model,
+            contents=prompt,
+        )
+        
+        return response.text
+
+    except errors.APIError as e:
+        print(f"⚠️ Vertex AI API Error calling Gemini ({e.code}: {e.message}). Skipping highlights.")
         return None
     except Exception as e:
-        print(f"⚠️ Error calling Gemini API ({type(e).__name__}: {e}). Skipping Gemini highlights.")
+        print(f"⚠️ Unexpected Error calling Vertex AI ({type(e).__name__}: {e}). Skipping highlights.")
         return None
 
 
